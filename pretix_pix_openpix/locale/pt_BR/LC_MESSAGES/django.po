@@ -1,0 +1,123 @@
+# pretix-pix-openpix
+# Copyright (C) 2025
+# This file is distributed under the same license as the PACKAGE package.
+# Renne Rocha <renne@lhc.net.br>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-19 19:57-0300\n"
+"PO-Revision-Date: 2025-08-19 20:03-0300\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.2.2\n"
+
+#: pretix_pix_openpix/apps.py:17 pretix_pix_openpix/apps.py:19
+#: pretix_pix_openpix/payment.py:37
+msgid "Brazilian Pix - OpenPix integration"
+msgstr "Pix - integração com OpenPix"
+
+#: pretix_pix_openpix/payment.py:46
+msgid "OpenPix AppID"
+msgstr "OpenPix AppID"
+
+#: pretix_pix_openpix/payment.py:48
+#, python-brace-format
+msgid "<a target=\"_blank\" rel=\"noopener\" href=\"{docs_url}\">{text}</a>"
+msgstr "<a target=\"_blank\" rel=\"noopener\" href=\"{docs_url}\">{text}</a>"
+
+#: pretix_pix_openpix/payment.py:50
+msgid "Click here for a tutorial on how to obtain the AppID"
+msgstr "Clique aqui para instruções de como obter o AppID"
+
+#: pretix_pix_openpix/payment.py:59
+msgid "Endpoint"
+msgstr "Endpoint"
+
+#: pretix_pix_openpix/payment.py:62
+msgid "Production"
+msgstr "Produção"
+
+#: pretix_pix_openpix/payment.py:63
+msgid "Sandbox"
+msgstr "Sandbox"
+
+#: pretix_pix_openpix/payment.py:72
+msgid ""
+"This payment method will generate a Pix code with order information that "
+"your customer can use to make the payment. You need to have a valid account "
+"in OpenPix to use this method."
+msgstr ""
+"Este método de pagamento irá gerar um código Pix com as informações do "
+"pedido que o seu cliente poderá utilizar para efetuar o pagamento. Você "
+"precisa ter uma conta válida no OpenPix para utilizar este método."
+
+#: pretix_pix_openpix/payment.py:80
+msgid ""
+"OpenPix sandbox settings are being used, you can test without actually "
+"sending money but you will need a sandbox account configured to use it."
+msgstr ""
+"Configurações de sandbox do OpenPix sendo utilizadas. Você pode efetuar "
+"testes sem manipular dinheiro real, mas você precisa ter uma conta de "
+"sandbox configurada para poder utilizá-la."
+
+#: pretix_pix_openpix/payment.py:84
+msgid ""
+"OpenPix production settings are being used, the generated Pix Code will be "
+"real and you will actually send money to the configured account if you make "
+"the payment."
+msgstr ""
+"Configurações de produção do OpenPix sendo utilizadas. O código Pix gerado "
+"será real e você irá manipular dinheiro real se efetuar o pagamento."
+
+#: pretix_pix_openpix/payment.py:160 pretix_pix_openpix/payment.py:180
+msgid ""
+"An error occurred while generating the Pix Code. Please try again. If the "
+"problem persists, contact the event organizers or select another payment "
+"method, if available."
+msgstr ""
+"Ocorreu um erro na geração do código Pix. Por favor, tente novamente. Se o "
+"problema persistir, entre em contato com a equipe organizadora do evento ou "
+"selecione outro método de pagamento, se disponível."
+
+#: pretix_pix_openpix/payment.py:165
+#, python-brace-format
+msgid ""
+"To make the payment, copy and paste the following Pix code into your banking "
+"app.\n"
+"\n"
+"{pix_code}\n"
+"\n"
+msgstr ""
+"Para efetuar o pagamento, copie e cole o código Pix a seguir na sua "
+"aplicação bancária.\n"
+"\n"
+"{pix_code}\n"
+"\n"
+
+#: pretix_pix_openpix/templates/pretix_pix_openpix/checkout_confirm.html:3
+msgid ""
+"After completing your purchase, we will provide you with a <strong>Pix code</"
+"strong> to be used to pay for your order."
+msgstr ""
+"Após completar sua compra, iremos fornecer um <strong>código Pix</strong> "
+"para ser utilizado para efetuar o pagamento do seu pedido."
+
+#: pretix_pix_openpix/templates/pretix_pix_openpix/payment_pending.html:3
+msgid ""
+"Your order has been successfully received. Make the payment via Pix by "
+"scanning the QR Code below or copy and paste the following code into your "
+"banking app."
+msgstr ""
+"Seu pedido foi recebido com sucesso. Efetue o pagamento via Pix escaneando o "
+"QR Code a seguir ou copie e cole o código na sua aplicação bancária."
+
+#: pretix_pix_openpix/templates/pretix_pix_openpix/payment_pending.html:13
+msgid "We will send you an email as soon as we received your payment."
+msgstr "Enviaremos um email assim que recebermos o seu pagamento."
