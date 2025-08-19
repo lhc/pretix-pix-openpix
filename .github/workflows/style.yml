@@ -1,0 +1,26 @@
+name: Code Style
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - 'pretix_pix_openpix/locale/**'
+      - 'pretix_pix_openpix/static/**'
+  pull_request:
+    branches: [ main, master ]
+    paths-ignore:
+      - 'pretix_pix_openpix/locale/**'
+      - 'pretix_pix_openpix/static/**'
+
+jobs:
+  linter-and-formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: "3.13"
+      - name: Install dependencies
+        run: pip install pre-commit
+      - name: Check pre-commit hooks
+        run: pre-commit run --all

@@ -1,0 +1,4 @@
+recursive-include pretix_pix_openpix/static *
+recursive-include pretix_pix_openpix/templates *
+recursive-include pretix_pix_openpix/locale *
+include LICENSE

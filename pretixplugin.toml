@@ -1,0 +1,5 @@
+[plugin]
+package = "pretix-pix-openpix"
+modules = [ "pretix_pix_openpix" ]
+marketplace_name = "pix-openpix"
+

@@ -1,0 +1,17 @@
+{% load i18n %}
+
+<p>{% blocktrans trimmed %}
+	Your order has been successfully received. Make the payment via Pix by scanning the
+	QR Code below or copy and paste the following code into your banking app.
+{% endblocktrans %}</p>
+
+<center><img src="{{ base64_qr_code }}" /></center>
+<center><p>{{ pix_code }}</p></center>
+
+<hr/>
+
+<p>{% blocktrans trimmed %}
+	We will send you an email as soon as we received your payment.
+{% endblocktrans %}</p>
+
+<hr/>

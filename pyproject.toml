@@ -1,0 +1,78 @@
+[project]
+name = "pretix-pix-openpix"
+dynamic = ["version"]
+description = "Plugin for Brazilian Pix payment method with integration with OpenPix platform."
+readme = "README.rst"
+license = "AGPL-3.0-or-later"
+keywords = ["pretix"]
+authors = [
+    {name = "Renne Rocha", email = "renne@lhc.net.br"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+maintainers = [
+    {name = "Renne Rocha", email = "renne@lhc.net.br"},
+]
+
+dependencies = [
+]
+
+[project.entry-points."pretix.plugin"]
+pretix_pix_openpix = "pretix_pix_openpix:PretixPluginMeta"
+
+[project.entry-points."distutils.commands"]
+build = "pretix_plugin_build.build:CustomBuild"
+
+[build-system]
+requires = [
+    "setuptools",
+    "pretix-plugin-build",
+]
+
+[project.urls]
+homepage = "https://github.com/lhc/pretix-pix-openpix"
+repository = "https://github.com/lhc/pretix-pix-openpix"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "pretix_pix_openpix.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["pretix*"]
+namespaces = false
+
+[tool.bumpver]
+current_version = "0.0.1"
+version_pattern = "MAJOR.MINOR.PATCH"
+commit_message = "bump version {old_version} -> {new_version}"
+tag_message = "{new_version}"
+tag_scope = "default"
+pre_commit_hook = ""
+post_commit_hook = ""
+commit = true
+tag = true
+push = false
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'current_version = "{version}"',
+]
+"pretix_pix_openpix/__init__.py" = [
+    "{version}",
+]
+
+[tool.isort]
+known_first_party = ["pretix"]
+known_third_party = ["django"]
+combine_star = true
+combine_as_imports = true
+order_by_type = true
+multi_line_output = 3
+include_trailing_comma = true
+use_parentheses = true
+line_length = 88
