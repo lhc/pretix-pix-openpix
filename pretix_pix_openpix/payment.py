@@ -18,15 +18,9 @@ from pretix.base.payment import BasePaymentProvider
 OPENPIX_API_PRODUCTION = "https://api.openpix.com.br/"
 OPENPIX_API_SANDBOX = "https://api.woovi-sandbox.com/"
 
-        # if self.event.currency not in SUPPORTED_CURRENCIES:
-        #     settings_content += (
-        #         '<br><br><div class="alert alert-warning">%s '
-        #         '<a href="https://developer.paypal.com/docs/api/reference/currency-codes/">%s</a>'
-        #         '</div>'
-        #     ) % (
-        #         _("PayPal does not process payments in your event's currency."),
-        #         _("Please check this PayPal page for a complete list of supported currencies.")
-        #     )
+SUPPORTED_CURRENCIES = [
+    'BRL',
+]
 
 class PixCodeGenerationException(Exception):
     pass
@@ -68,11 +62,18 @@ class PixOpenPix(BasePaymentProvider):
         return OrderedDict(custom_keys + default_form_fields)
 
     def settings_content_render(self, request):
-        return _(
+        settings_content = _(
             "This payment method will generate a Pix code with order information "
             "that your customer can use to make the payment. You need to have a valid "
-            "account in OpenPix to use this method."
+            "account in <a href=\"https://openpix.com.br/\">OpenPix</a> to use this method."
         )
+
+        if self.event.currency not in SUPPORTED_CURRENCIES:
+            settings_content += (
+                _('<br><br><div class="alert alert-warning">Pix payments are only allowed when the event currency is BRL.</div>')
+            )
+
+        return settings_content
 
     @property
     def test_mode_message(self):
@@ -85,6 +86,9 @@ class PixOpenPix(BasePaymentProvider):
                 'Pix Code will be real and you will actually send money to the configured account if you make the payment.')
 
         return None
+
+    def is_allowed(self, request, total):
+        return super().is_allowed(request, total) and self.event.currency in SUPPORTED_CURRENCIES
 
     def payment_is_valid_session(self, request):
         return True
