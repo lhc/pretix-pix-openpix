@@ -1,4 +1,4 @@
-from django.utils.translation import gettext_lazy
+from django.utils.translation import gettext_lazy as _
 
 from . import __version__
 
@@ -11,18 +11,22 @@ except ImportError:
 class PluginApp(PluginConfig):
     default = True
     name = "pretix_pix_openpix"
-    verbose_name = "Brazilian Pix - OpenPix integration"
+    verbose_name = _("Brazilian Pix - OpenPix integration")
 
     class PretixPluginMeta:
-        name = gettext_lazy("Brazilian Pix - OpenPix integration")
+        name = _("Brazilian Pix - OpenPix integration")
         author = "Renne Rocha"
-        description = gettext_lazy("Brazilian Pix - OpenPix integration")
+        description = _("Accept Pix payments with your OpenPix account.")
         visible = True
         version = __version__
         category = "PAYMENT"
         compatibility = "pretix>=2.7.0"
-        settings_links = []
+        settings_links = [
+            ((_("Payment"), _("OpenPix")), "control:event.settings.payment.provider", {"provider": "pix_openpix"}),
+        ]
         navigation_links = []
 
     def ready(self):
         from . import signals  # NOQA
+
+
