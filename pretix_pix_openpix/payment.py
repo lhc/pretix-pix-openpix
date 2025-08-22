@@ -3,6 +3,7 @@ import re
 import uuid
 from collections import OrderedDict
 from io import BytesIO
+from http import HTTPStatus
 
 import qrcode
 import requests
@@ -15,12 +16,24 @@ from django.utils.translation import gettext_lazy as _
 from pretix.base.payment import BasePaymentProvider
 
 
-OPENPIX_API_PRODUCTION = "https://api.openpix.com.br/"
-OPENPIX_API_SANDBOX = "https://api.woovi-sandbox.com/"
+OPENPIX_API_PRODUCTION = "https://api.openpix.com.br"
+OPENPIX_API_SANDBOX = "https://api.woovi-sandbox.com"
 
 SUPPORTED_CURRENCIES = [
     'BRL',
 ]
+
+
+def valid_api_credentials(app_id, endpoint):
+    base_api_url = (
+        OPENPIX_API_PRODUCTION if endpoint == "production" else OPENPIX_API_SANDBOX
+    )
+    response = requests.get(
+        f"{base_api_url}/api/v1/account/",
+        headers={'Authorization': app_id},
+    )
+    return response.status_code == HTTPStatus.OK
+
 
 class PixCodeGenerationException(Exception):
     pass
@@ -53,13 +66,22 @@ class PixOpenPix(BasePaymentProvider):
                     label=_("Endpoint"),
                     initial="production",
                     choices=(
-                        ("live", _("Production")),
+                        ("production", _("Production")),
                         ("sandbox", _("Sandbox")),
                     ),
                 ),
             ),
         ]
         return OrderedDict(custom_keys + default_form_fields)
+
+    def settings_form_clean(self, cleaned_data):
+        app_id = cleaned_data.get("payment_pix_openpix_app_id")
+        endpoint = cleaned_data.get("payment_pix_openpix_endpoint")
+        if not valid_api_credentials(app_id, endpoint):
+            raise ValidationError(
+                {'payment_pix_openpix_app_id': _("Please provide a valid API key. Ensure the selected endpoint is correct for the key provided.")}
+            )
+        return cleaned_data
 
     def settings_content_render(self, request):
         settings_content = _(
@@ -117,10 +139,11 @@ class PixOpenPix(BasePaymentProvider):
             "Authorization": app_id,
         }
         response = requests.post(
-            f"{api_url}api/v1/qrcode-static",
+            f"{api_url}/api/v1/qrcode-static",
             json=payload,
             headers=headers,
         )
+
         data = response.json()
 
         if response.status_code == 400:
@@ -129,7 +152,7 @@ class PixOpenPix(BasePaymentProvider):
                 == "Já existe um QRCode com este identificador. O identificador deve ser único"
             ):
                 response = requests.get(
-                    f"{api_url}api/v1/qrcode-static/{identifier}",
+                    f"{api_url}/api/v1/qrcode-static/{identifier}",
                     headers=headers,
                 )
                 data = response.json()
