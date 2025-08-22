@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-19 19:57-0300\n"
-"PO-Revision-Date: 2025-08-19 20:03-0300\n"
+"POT-Creation-Date: 2025-08-22 09:43-0300\n"
+"PO-Revision-Date: 2025-08-22 09:48-0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: pt_BR\n"
@@ -18,47 +18,76 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Poedit 3.2.2\n"
 
-#: pretix_pix_openpix/apps.py:17 pretix_pix_openpix/apps.py:19
-#: pretix_pix_openpix/payment.py:37
+#: pretix_pix_openpix/apps.py:14 pretix_pix_openpix/apps.py:17
+#: pretix_pix_openpix/payment.py:44
 msgid "Brazilian Pix - OpenPix integration"
 msgstr "Pix - integração com OpenPix"
 
-#: pretix_pix_openpix/payment.py:46
+#: pretix_pix_openpix/apps.py:19
+msgid "Accept Pix payments with your OpenPix account."
+msgstr "Aceitar pagamentos via Pix com sua conta OpenPix."
+
+#: pretix_pix_openpix/apps.py:25
+msgid "Payment"
+msgstr "Pagamento"
+
+#: pretix_pix_openpix/apps.py:25
+msgid "OpenPix"
+msgstr "OpenPix"
+
+#: pretix_pix_openpix/payment.py:53
 msgid "OpenPix AppID"
 msgstr "OpenPix AppID"
 
-#: pretix_pix_openpix/payment.py:48
+#: pretix_pix_openpix/payment.py:55
 #, python-brace-format
 msgid "<a target=\"_blank\" rel=\"noopener\" href=\"{docs_url}\">{text}</a>"
 msgstr "<a target=\"_blank\" rel=\"noopener\" href=\"{docs_url}\">{text}</a>"
 
-#: pretix_pix_openpix/payment.py:50
+#: pretix_pix_openpix/payment.py:57
 msgid "Click here for a tutorial on how to obtain the AppID"
 msgstr "Clique aqui para instruções de como obter o AppID"
 
-#: pretix_pix_openpix/payment.py:59
+#: pretix_pix_openpix/payment.py:66
 msgid "Endpoint"
 msgstr "Endpoint"
 
-#: pretix_pix_openpix/payment.py:62
+#: pretix_pix_openpix/payment.py:69
 msgid "Production"
 msgstr "Produção"
 
-#: pretix_pix_openpix/payment.py:63
+#: pretix_pix_openpix/payment.py:70
 msgid "Sandbox"
 msgstr "Sandbox"
 
-#: pretix_pix_openpix/payment.py:72
+#: pretix_pix_openpix/payment.py:82
+msgid ""
+"Please provide a valid API key. Ensure the selected endpoint is correct for "
+"the key provided."
+msgstr ""
+"Por favor, forneça uma chave de API válida. Garanta que o endpoint "
+"selecionado está correto para a chave informada."
+
+#: pretix_pix_openpix/payment.py:88
 msgid ""
 "This payment method will generate a Pix code with order information that "
 "your customer can use to make the payment. You need to have a valid account "
-"in OpenPix to use this method."
+"in <a href=\"https://openpix.com.br/\">OpenPix</a> to use this method."
 msgstr ""
-"Este método de pagamento irá gerar um código Pix com as informações do "
-"pedido que o seu cliente poderá utilizar para efetuar o pagamento. Você "
-"precisa ter uma conta válida no OpenPix para utilizar este método."
+"Este método de pagamento gerará um código Pix com as informações do pedido "
+"que seu cliente poderá usar para efetuar o pagamento. Você precisa ter uma "
+"conta válida no <a href=\"https://openpix.com.br/\">OpenPix</a> para usar "
+"este método."
 
-#: pretix_pix_openpix/payment.py:80
+#: pretix_pix_openpix/payment.py:95
+msgid ""
+"<br><br><div class=\"alert alert-warning\">Pix payments are only allowed "
+"when the event currency is BRL.</div>"
+msgstr ""
+"<br><br><div class=\"alert alert-warning\">Os pagamentos via Pix só serão "
+"permitidos quando a moeda do evento for BRL.</div>"
+
+#: pretix_pix_openpix/payment.py:103
 msgid ""
 "OpenPix sandbox settings are being used, you can test without actually "
 "sending money but you will need a sandbox account configured to use it."
@@ -67,7 +96,7 @@ msgstr ""
 "testes sem manipular dinheiro real, mas você precisa ter uma conta de "
 "sandbox configurada para poder utilizá-la."
 
-#: pretix_pix_openpix/payment.py:84
+#: pretix_pix_openpix/payment.py:107
 msgid ""
 "OpenPix production settings are being used, the generated Pix Code will be "
 "real and you will actually send money to the configured account if you make "
@@ -76,7 +105,7 @@ msgstr ""
 "Configurações de produção do OpenPix sendo utilizadas. O código Pix gerado "
 "será real e você irá manipular dinheiro real se efetuar o pagamento."
 
-#: pretix_pix_openpix/payment.py:160 pretix_pix_openpix/payment.py:180
+#: pretix_pix_openpix/payment.py:187 pretix_pix_openpix/payment.py:207
 msgid ""
 "An error occurred while generating the Pix Code. Please try again. If the "
 "problem persists, contact the event organizers or select another payment "
@@ -86,7 +115,7 @@ msgstr ""
 "problema persistir, entre em contato com a equipe organizadora do evento ou "
 "selecione outro método de pagamento, se disponível."
 
-#: pretix_pix_openpix/payment.py:165
+#: pretix_pix_openpix/payment.py:192
 #, python-brace-format
 msgid ""
 "To make the payment, copy and paste the following Pix code into your banking "
