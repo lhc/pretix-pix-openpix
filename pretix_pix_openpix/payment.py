@@ -1,9 +1,7 @@
 import base64
-import re
-import uuid
 from collections import OrderedDict
-from io import BytesIO
 from http import HTTPStatus
+from io import BytesIO
 
 import qrcode
 import requests
@@ -15,12 +13,11 @@ from django.utils.translation import gettext_lazy as _
 
 from pretix.base.payment import BasePaymentProvider
 
-
 OPENPIX_API_PRODUCTION = "https://api.openpix.com.br"
 OPENPIX_API_SANDBOX = "https://api.woovi-sandbox.com"
 
 SUPPORTED_CURRENCIES = [
-    'BRL',
+    "BRL",
 ]
 
 
@@ -30,7 +27,8 @@ def valid_api_credentials(app_id, endpoint):
     )
     response = requests.get(
         f"{base_api_url}/api/v1/account/",
-        headers={'Authorization': app_id},
+        headers={"Authorization": app_id},
+        timeout=10,
     )
     return response.status_code == HTTPStatus.OK
 
@@ -79,7 +77,11 @@ class PixOpenPix(BasePaymentProvider):
         endpoint = cleaned_data.get("payment_pix_openpix_endpoint")
         if not valid_api_credentials(app_id, endpoint):
             raise ValidationError(
-                {'payment_pix_openpix_app_id': _("Please provide a valid API key. Ensure the selected endpoint is correct for the key provided.")}
+                {
+                    "payment_pix_openpix_app_id": _(
+                        "Please provide a valid API key. Ensure the selected endpoint is correct for the key provided."
+                    )
+                }
             )
         return cleaned_data
 
@@ -87,30 +89,37 @@ class PixOpenPix(BasePaymentProvider):
         settings_content = _(
             "This payment method will generate a Pix code with order information "
             "that your customer can use to make the payment. You need to have a valid "
-            "account in <a href=\"https://openpix.com.br/\">OpenPix</a> to use this method."
+            'account in <a href="https://openpix.com.br/">OpenPix</a> to use this method.'
         )
 
         if self.event.currency not in SUPPORTED_CURRENCIES:
-            settings_content += (
-                _('<br><br><div class="alert alert-warning">Pix payments are only allowed when the event currency is BRL.</div>')
+            settings_content += _(
+                '<br><br><div class="alert alert-warning">Pix payments are only allowed when the event currency is BRL.</div>'
             )
 
         return settings_content
 
     @property
     def test_mode_message(self):
-        if self.settings.endpoint == 'sandbox':
-            return _('OpenPix sandbox settings are being used, you can test without actually sending money but you will need a '
-                     'sandbox account configured to use it.')
+        if self.settings.endpoint == "sandbox":
+            return _(
+                "OpenPix sandbox settings are being used, you can test without actually sending money but you will need a "
+                "sandbox account configured to use it."
+            )
 
-        if self.settings.endpoint == 'production':
-            return _('OpenPix production settings are being used, the generated '
-                'Pix Code will be real and you will actually send money to the configured account if you make the payment.')
+        if self.settings.endpoint == "production":
+            return _(
+                "OpenPix production settings are being used, the generated "
+                "Pix Code will be real and you will actually send money to the configured account if you make the payment."
+            )
 
         return None
 
     def is_allowed(self, request, total):
-        return super().is_allowed(request, total) and self.event.currency in SUPPORTED_CURRENCIES
+        return (
+            super().is_allowed(request, total)
+            and self.event.currency in SUPPORTED_CURRENCIES
+        )
 
     def payment_is_valid_session(self, request):
         return True
@@ -142,6 +151,7 @@ class PixOpenPix(BasePaymentProvider):
             f"{api_url}/api/v1/qrcode-static",
             json=payload,
             headers=headers,
+            timeout=10,
         )
 
         data = response.json()
@@ -154,6 +164,7 @@ class PixOpenPix(BasePaymentProvider):
                 response = requests.get(
                     f"{api_url}/api/v1/qrcode-static/{identifier}",
                     headers=headers,
+                    timeout=10,
                 )
                 data = response.json()
 
@@ -179,14 +190,12 @@ class PixOpenPix(BasePaymentProvider):
     def order_pending_mail_render(self, order, payment):
         try:
             pix_code, base64_qr_code = self._generate_pix_code(
-                amount=payment.amount,
-                identifier=payment.order.code
+                amount=payment.amount, identifier=payment.order.code
             )
         except PixCodeGenerationException:
-            messages.error(request, 
-                _('An error occurred while generating the Pix Code. Please try again. If the problem persists, contact the event organizers or select another payment method, if available.')
+            return _(
+                "An error occurred while generating the Pix Code. Please try again. If the problem persists, contact the event organizers or select another payment method, if available."
             )
-            return ""
 
         return _(
             f"""To make the payment, copy and paste the following Pix code into your banking app.
@@ -199,12 +208,14 @@ class PixOpenPix(BasePaymentProvider):
     def payment_pending_render(self, request, payment):
         try:
             pix_code, base64_qr_code = self._generate_pix_code(
-                amount=payment.amount,
-                identifier=payment.order.code
+                amount=payment.amount, identifier=payment.order.code
             )
         except PixCodeGenerationException:
-            messages.error(request, 
-                _('An error occurred while generating the Pix Code. Please try again. If the problem persists, contact the event organizers or select another payment method, if available.')
+            messages.error(
+                request,
+                _(
+                    "An error occurred while generating the Pix Code. Please try again. If the problem persists, contact the event organizers or select another payment method, if available."
+                ),
             )
             return ""
 

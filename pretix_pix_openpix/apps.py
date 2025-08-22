@@ -22,11 +22,13 @@ class PluginApp(PluginConfig):
         category = "PAYMENT"
         compatibility = "pretix>=2.7.0"
         settings_links = [
-            ((_("Payment"), _("OpenPix")), "control:event.settings.payment.provider", {"provider": "pix_openpix"}),
+            (
+                (_("Payment"), _("OpenPix")),
+                "control:event.settings.payment.provider",
+                {"provider": "pix_openpix"},
+            ),
         ]
         navigation_links = []
 
     def ready(self):
         from . import signals  # NOQA
-
-
