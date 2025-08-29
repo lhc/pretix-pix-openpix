@@ -36,6 +36,9 @@ requires = [
 homepage = "https://github.com/lhc/pretix-pix-openpix"
 repository = "https://github.com/lhc/pretix-pix-openpix"
 
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "pretix.testutils.settings"
+
 [tool.setuptools]
 include-package-data = true
 
