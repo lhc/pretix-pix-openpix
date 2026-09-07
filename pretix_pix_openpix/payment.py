@@ -11,30 +11,105 @@ from django.core.exceptions import ValidationError
 from django.template.loader import get_template
 from django.utils.translation import gettext_lazy as _
 
-from pretix.base.payment import BasePaymentProvider
-
-OPENPIX_API_PRODUCTION = "https://api.openpix.com.br"
-OPENPIX_API_SANDBOX = "https://api.woovi-sandbox.com"
+from pretix.base.models.orders import OrderPayment, OrderRefund
+from pretix.base.payment import BasePaymentProvider, PaymentException
 
 SUPPORTED_CURRENCIES = [
     "BRL",
 ]
 
 
-def valid_api_credentials(app_id, endpoint):
-    base_api_url = (
-        OPENPIX_API_PRODUCTION if endpoint == "production" else OPENPIX_API_SANDBOX
-    )
-    response = requests.get(
-        f"{base_api_url}/api/v1/account/",
-        headers={"Authorization": app_id},
-        timeout=10,
-    )
-    return response.status_code == HTTPStatus.OK
-
-
 class PixCodeGenerationException(Exception):
     pass
+
+
+class OpenPix:
+    API_URL_MAP = {
+        "production": "https://api.openpix.com.br",
+        "sandbox": "https://api.woovi-sandbox.com",
+    }
+
+    def __init__(self, app_id: str, environment: str, timeout: int = 10):
+        self.base_api_url = OpenPix.API_URL_MAP.get(environment)
+        if not self.base_api_url:
+            raise ValueError("Invalid environment")
+        self.headers = {"Authorization": app_id}
+        self.timeout = timeout
+
+    def valid_credentials(self) -> bool:
+        response = requests.get(
+            f"{self.base_api_url}/api/v1/account/",
+            headers=self.headers,
+            timeout=self.timeout,
+        )
+        return response.status_code == HTTPStatus.OK
+
+    def refund(self, refund: OrderRefund) -> bool:
+        refund_value = str(int(refund.amount * 100))
+        payload = {
+            "transactionEndToEndId": refund.payment.info_data.get("end_to_end_id")
+            or "",
+            "correlationID": refund.order.code,
+            "value": refund_value,
+            "comment": refund.comment,
+        }
+        response = requests.post(
+            f"{self.base_api_url}/api/v1/refund",
+            json=payload,
+            headers=self.headers,
+            timeout=self.timeout,
+        )
+        return response.status_code == HTTPStatus.OK
+
+    def qrcode_static(self, payment: OrderPayment):
+        payload = {
+            "name": payment.order.code,
+            "correlationID": payment.order.code,
+            "value": str(int(payment.amount * 100)),
+            "identifier": payment.order.code,
+            "comment": str(_(f"Payment of order {payment.order.code}")),
+        }
+        response = requests.post(
+            f"{self.base_api_url}/api/v1/qrcode-static",
+            json=payload,
+            headers=self.headers,
+            timeout=self.timeout,
+        )
+        data = response.json()
+
+        if response.status_code == HTTPStatus.BAD_REQUEST:
+            if (
+                data["error"]
+                == "Já existe um QRCode com este identificador. O identificador deve ser único"
+            ):
+                response = requests.get(
+                    f"{self.base_api_url}/api/v1/qrcode-static/{payment.order.code}",
+                    headers=self.headers,
+                    timeout=self.timeout,
+                )
+                data = response.json()
+
+        pix_qr_code = data.get("pixQrCode") or {}
+        br_code = pix_qr_code.get("brCode")
+        if not br_code:
+            raise PixCodeGenerationException
+
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=6,
+            border=4,
+        )
+        qr.add_data(br_code)
+        qr.make(fit=True)
+        qr_code_img = qr.make_image(fill_color="black", back_color="white")
+
+        buffered = BytesIO()
+        qr_code_img.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue())
+        base64_qr_code = f"data:image/png;base64,{img_str.decode()}"
+
+        return br_code, base64_qr_code
 
 
 class PixOpenPix(BasePaymentProvider):
@@ -73,13 +148,15 @@ class PixOpenPix(BasePaymentProvider):
         return OrderedDict(custom_keys + default_form_fields)
 
     def settings_form_clean(self, cleaned_data):
-        app_id = cleaned_data.get("payment_pix_openpix_app_id")
-        endpoint = cleaned_data.get("payment_pix_openpix_endpoint")
-        if not valid_api_credentials(app_id, endpoint):
+        openpix = OpenPix(
+            cleaned_data.get("payment_pix_openpix_app_id"),
+            cleaned_data.get("payment_pix_openpix_endpoint"),
+        )
+        if not openpix.valid_credentials():
             raise ValidationError(
                 {
                     "payment_pix_openpix_app_id": _(
-                        "Please provide a valid API key. Ensure the selected endpoint is correct for the key provided."
+                        "Please provide a valid OpenPix AppID. Ensure the selected endpoint is correct for the key provided."
                     )
                 }
             )
@@ -101,19 +178,17 @@ class PixOpenPix(BasePaymentProvider):
 
     @property
     def test_mode_message(self):
-        if self.settings.endpoint == "sandbox":
-            return _(
-                "OpenPix sandbox settings are being used, you can test without actually sending money but you will need a "
-                "sandbox account configured to use it."
-            )
-
-        if self.settings.endpoint == "production":
-            return _(
+        test_mode_messages = {
+            "production": _(
                 "OpenPix production settings are being used, the generated "
                 "Pix Code will be real and you will actually send money to the configured account if you make the payment."
-            )
-
-        return None
+            ),
+            "sandbox": _(
+                "OpenPix sandbox settings are being used, you can test without actually sending money but you will need a "
+                "sandbox account configured to use it."
+            ),
+        }
+        return test_mode_messages.get(self.settings.endpoint)
 
     def is_allowed(self, request, total):
         return (
@@ -128,70 +203,10 @@ class PixOpenPix(BasePaymentProvider):
         template = get_template("pretix_pix_openpix/checkout_confirm.html")
         return template.render({})
 
-    def _generate_pix_code(self, *, amount, identifier):
-        app_id = self.settings.get("app_id")
-        endpoint = self.settings.get("endpoint")
-        api_url = (
-            OPENPIX_API_PRODUCTION if endpoint == "production" else OPENPIX_API_SANDBOX
-        )
-        amount = str(amount * 100)
-        name = identifier
-
-        payload = {
-            "name": name,
-            "correlationID": identifier,
-            "value": amount,
-            "identifier": identifier,
-            "comment": "good",
-        }
-        headers = {
-            "Authorization": app_id,
-        }
-        response = requests.post(
-            f"{api_url}/api/v1/qrcode-static",
-            json=payload,
-            headers=headers,
-            timeout=10,
-        )
-
-        data = response.json()
-
-        if response.status_code == 400:
-            if (
-                data["error"]
-                == "Já existe um QRCode com este identificador. O identificador deve ser único"
-            ):
-                response = requests.get(
-                    f"{api_url}/api/v1/qrcode-static/{identifier}",
-                    headers=headers,
-                    timeout=10,
-                )
-                data = response.json()
-
-        pix_code = data["pixQrCode"]["brCode"]
-
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_M,
-            box_size=6,
-            border=4,
-        )
-        qr.add_data(pix_code)
-        qr.make(fit=True)
-        qr_code_img = qr.make_image(fill_color="black", back_color="white")
-
-        buffered = BytesIO()
-        qr_code_img.save(buffered, format="PNG")
-        img_str = base64.b64encode(buffered.getvalue())
-        base64_qr_code = f"data:image/png;base64,{img_str.decode()}"
-
-        return pix_code, base64_qr_code
-
     def order_pending_mail_render(self, order, payment):
+        openpix = OpenPix(self.settings.get("app_id"), self.settings.get("endpoint"))
         try:
-            pix_code, base64_qr_code = self._generate_pix_code(
-                amount=payment.amount, identifier=payment.order.code
-            )
+            pix_code, base64_qr_code = openpix.qrcode_static(payment)
         except PixCodeGenerationException:
             return _(
                 "An error occurred while generating the Pix Code. Please try again. If the problem persists, contact the event organizers or select another payment method, if available."
@@ -205,11 +220,26 @@ class PixOpenPix(BasePaymentProvider):
 """
         )
 
+    def payment_refund_supported(self, payment: OrderPayment) -> bool:
+        end_to_end_id = payment.info_data.get("end_to_end_id") or None
+        correlation_id = payment.order.code
+        return all([end_to_end_id, correlation_id])
+
+    def payment_partial_refund_supported(self, payment: OrderPayment) -> bool:
+        end_to_end_id = payment.info_data.get("end_to_end_id") or None
+        correlation_id = payment.order.code
+        return all([end_to_end_id, correlation_id])
+
+    def execute_refund(self, refund: OrderRefund) -> None:
+        openpix = OpenPix(self.settings.get("app_id"), self.settings.get("endpoint"))
+        if not openpix.refund(refund):
+            raise PaymentException
+        refund.done()
+
     def payment_pending_render(self, request, payment):
+        openpix = OpenPix(self.settings.get("app_id"), self.settings.get("endpoint"))
         try:
-            pix_code, base64_qr_code = self._generate_pix_code(
-                amount=payment.amount, identifier=payment.order.code
-            )
+            pix_code, base64_qr_code = openpix.qrcode_static(payment)
         except PixCodeGenerationException:
             messages.error(
                 request,

@@ -18,6 +18,7 @@ def webhook(request):
     try:
         data = json.loads(event_body)
     except json.decoder.JSONDecodeError:
+        logger.warning("pretix_pix_openpix.webhook.undecodable_content")
         return HttpResponse(status=HTTPStatus.OK)
 
     event = data.get("event") or ""
