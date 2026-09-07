@@ -25,6 +25,7 @@ def webhook(request):
     if event == "OPENPIX:TRANSACTION_RECEIVED":
         pix = data.get("pix") or {}
         identifier = pix.get("transactionID")
+        end_to_end_id = pix.get("endToEndId")
         value = pix.get("value", 0.0) / 100
 
         logger.info("%s received for order %s", event, identifier)
@@ -40,6 +41,9 @@ def webhook(request):
                 ),
             ).last()
             if order_payment:
+                order_payment.info_data = {
+                    "end_to_end_id": end_to_end_id,
+                }
                 order_payment.confirm()
 
     return HttpResponse(status=HTTPStatus.OK)
