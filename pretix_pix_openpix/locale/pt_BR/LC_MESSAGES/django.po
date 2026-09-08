@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-07 17:11-0300\n"
+"POT-Creation-Date: 2026-09-08 10:56-0300\n"
 "PO-Revision-Date: 2025-08-22 09:48-0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -54,8 +54,8 @@ msgid "Click here for a tutorial on how to obtain the AppID"
 msgstr "Clique aqui para instruções de como obter o AppID"
 
 #: pretix_pix_openpix/payment.py:139
-msgid "Endpoint"
-msgstr "Endpoint"
+msgid "Environment"
+msgstr "Ambiente"
 
 #: pretix_pix_openpix/payment.py:142
 msgid "Production"
@@ -159,3 +159,6 @@ msgstr ""
 #: pretix_pix_openpix/templates/pretix_pix_openpix/payment_pending.html:13
 msgid "We will send you an email as soon as we received your payment."
 msgstr "Enviaremos um email assim que recebermos o seu pagamento."
+
+#~ msgid "Endpoint"
+#~ msgstr "Endpoint"

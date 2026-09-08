@@ -134,9 +134,9 @@ class PixOpenPix(BasePaymentProvider):
                 ),
             ),
             (
-                "endpoint",
+                "environment",
                 forms.ChoiceField(
-                    label=_("Endpoint"),
+                    label=_("Environment"),
                     initial="production",
                     choices=(
                         ("production", _("Production")),
@@ -150,7 +150,7 @@ class PixOpenPix(BasePaymentProvider):
     def settings_form_clean(self, cleaned_data):
         openpix = OpenPix(
             cleaned_data.get("payment_pix_openpix_app_id"),
-            cleaned_data.get("payment_pix_openpix_endpoint"),
+            cleaned_data.get("payment_pix_openpix_environment"),
         )
         if not openpix.valid_credentials():
             raise ValidationError(
@@ -188,7 +188,7 @@ class PixOpenPix(BasePaymentProvider):
                 "sandbox account configured to use it."
             ),
         }
-        return test_mode_messages.get(self.settings.endpoint)
+        return test_mode_messages.get(self.settings.environment)
 
     def is_allowed(self, request, total):
         return (
@@ -204,7 +204,7 @@ class PixOpenPix(BasePaymentProvider):
         return template.render({})
 
     def order_pending_mail_render(self, order, payment):
-        openpix = OpenPix(self.settings.get("app_id"), self.settings.get("endpoint"))
+        openpix = OpenPix(self.settings.app_id, self.settings.environment)
         try:
             pix_code, base64_qr_code = openpix.qrcode_static(payment)
         except PixCodeGenerationException:
@@ -231,13 +231,13 @@ class PixOpenPix(BasePaymentProvider):
         return all([end_to_end_id, correlation_id])
 
     def execute_refund(self, refund: OrderRefund) -> None:
-        openpix = OpenPix(self.settings.get("app_id"), self.settings.get("endpoint"))
+        openpix = OpenPix(self.settings.app_id, self.settings.environment)
         if not openpix.refund(refund):
             raise PaymentException
         refund.done()
 
     def payment_pending_render(self, request, payment):
-        openpix = OpenPix(self.settings.get("app_id"), self.settings.get("endpoint"))
+        openpix = OpenPix(self.settings.app_id, self.settings.environment)
         try:
             pix_code, base64_qr_code = openpix.qrcode_static(payment)
         except PixCodeGenerationException:
