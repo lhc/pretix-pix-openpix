@@ -1,10 +1,25 @@
-import qrcode
 import base64
-import requests
-from pretix.base.models.orders import OrderPayment, OrderRefund
+import urllib.parse
+from http import HTTPStatus
 from io import BytesIO
 
-from http import HTTPStatus
+import qrcode
+import requests
+from django.conf import settings
+from django.urls import reverse
+from django.utils.translation import gettext_lazy as _
+
+from pretix.base.models.orders import OrderPayment, OrderRefund
+
+API_URL_MAP = {
+    "production": "https://api.openpix.com.br",
+    "sandbox": "https://api.woovi-sandbox.com",
+}
+
+WEBHOOK_EVENTS = {
+    "OPENPIX:TRANSACTION_RECEIVED",
+    "OPENPIX:TRANSACTION_REFUND_RECEIVED",
+}
 
 
 class PixCodeGenerationException(Exception):
@@ -12,13 +27,8 @@ class PixCodeGenerationException(Exception):
 
 
 class OpenPix:
-    API_URL_MAP = {
-        "production": "https://api.openpix.com.br",
-        "sandbox": "https://api.woovi-sandbox.com",
-    }
-
     def __init__(self, app_id: str, environment: str, timeout: int = 10):
-        self.base_api_url = OpenPix.API_URL_MAP.get(environment)
+        self.base_api_url = API_URL_MAP.get(environment)
         if not self.base_api_url:
             raise ValueError("Invalid environment")
         self.headers = {"Authorization": app_id}
@@ -98,3 +108,35 @@ class OpenPix:
         base64_qr_code = f"data:image/png;base64,{img_str.decode()}"
 
         return br_code, base64_qr_code
+
+    def register_webhooks(self) -> None:
+        webhook_full_url = urllib.parse.urljoin(
+            settings.SITE_URL, reverse("plugins:pretix_pix_openpix:webhook")
+        )
+        response = requests.get(
+            f"{self.base_api_url}/api/v1/webhook",
+            headers=self.headers,
+            timeout=self.timeout,
+            params={"url": webhook_full_url},
+        )
+
+        active_events = set()
+        for webhook in response.json()["webhooks"]:
+            if webhook["isActive"]:
+                active_events.add(webhook["event"])
+
+        for event in WEBHOOK_EVENTS - active_events:
+            response = requests.post(
+                f"{self.base_api_url}/api/v1/webhook",
+                headers=self.headers,
+                timeout=self.timeout,
+                json={
+                    "webhook": {
+                        "name": event,
+                        "event": event,
+                        "url": webhook_full_url,
+                        "authorization": "openpix",
+                        "isActive": True,
+                    }
+                },
+            )
