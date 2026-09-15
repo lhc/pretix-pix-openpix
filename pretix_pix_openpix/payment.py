@@ -63,6 +63,13 @@ class PixOpenPix(BasePaymentProvider):
                     )
                 }
             )
+
+        # OpenPix webhooks are registered during the plugin configuration form
+        # validation because pretix plugin code structure doesn't provide an easy
+        # way to override the save() method of the general SettingsForm form (shared by
+        # all other plugins) that would be the proper location to perform that action.
+        openpix.register_webhooks()
+
         return cleaned_data
 
     def settings_content_render(self, request):
