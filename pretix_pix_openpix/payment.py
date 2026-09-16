@@ -8,7 +8,8 @@ from django.utils.translation import gettext_lazy as _
 
 from pretix.base.models.orders import OrderPayment, OrderRefund
 from pretix.base.payment import BasePaymentProvider, PaymentException
-from pretix_pix_openpix import OpenPix, PixCodeGenerationException
+
+from .openpix import OpenPix, PixCodeGenerationException
 
 SUPPORTED_CURRENCIES = [
     "BRL",
